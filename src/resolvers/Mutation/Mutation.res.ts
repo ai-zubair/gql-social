@@ -1,6 +1,6 @@
 import { uuid } from 'uuidv4';
 import { IResolverObject, IFieldResolver } from 'graphql-tools';
-import { CreateUserArgs, CreatePostArgs, CreateCommentArgs, DeleteArgs } from './mutation.type';
+import { CreateUserArgs, CreatePostArgs, CreateCommentArgs, DeleteArgs } from '../../types/mutation.type';
 import { Context, EmptyParent } from '../../types/common.type';
 
 const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = (parent, args, { db }, info) => {
