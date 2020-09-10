@@ -1,15 +1,12 @@
 import { IResolverObject } from 'graphql-tools';
-import { Context } from '../index';
-import { Post, User, Comment } from '../db';
+import { Post, User, Comment } from '../../db';
+import { Context, EmptyParent } from '../../types/common.type';
 
-interface Parent{
-
-}
 interface QueryArgs{
   keyword: string;
 }
 
-const Query: IResolverObject<Parent, Context, QueryArgs>  = {
+const Query: IResolverObject<EmptyParent, Context, QueryArgs>  = {
   posts(parent, args, { db }, info): Post[]{
     const keyword = args.keyword;
     if(keyword){ 

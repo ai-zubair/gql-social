@@ -1,12 +1,8 @@
 import { IResolverObject } from 'graphql-tools';
-import { User } from '../db';
-import { Context } from '../index';
+import { User } from '../../db';
+import { Context, EmptyArgs } from '../../types/common.type';
 
-interface Args{
-
-}
-
-const User: IResolverObject<User, Context, Args> = {
+const User: IResolverObject<User, Context, EmptyArgs> = {
   posts(parent, args, { db }, info){
     return db.dummyPosts.filter( post => post.author === parent.id)
   },

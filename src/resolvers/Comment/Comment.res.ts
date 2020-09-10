@@ -1,12 +1,8 @@
 import { IResolverObject } from 'graphql-tools';
-import { Comment } from '../db';
-import { Context } from '..';
+import { Comment } from '../../db';
+import { Context, EmptyArgs } from '../../types/common.type';
 
-interface Args{
-  
-}
-
-const Comment: IResolverObject<Comment, Context, Args> = {
+const Comment: IResolverObject<Comment, Context, EmptyArgs> = {
   author(parent, args, { db }, info){
     return db.dummyUsers.find( user => user.id === parent.author)
   },

@@ -1,45 +1,9 @@
 import { uuid } from 'uuidv4';
 import { IResolverObject, IFieldResolver } from 'graphql-tools';
-import { Context } from '../index';
-import { Post, User, Comment } from '../db';
+import { CreateUserArgs, CreatePostArgs, CreateCommentArgs, DeleteArgs } from './mutation.type';
+import { Context, EmptyParent } from '../../types/common.type';
 
-interface Parent{
-
-}
-
-interface UserData{
-  name: string;
-  email: string;
-}
-
-interface CreateUserArgs{
-  data: UserData;
-}
-interface PostData{
-  title: string;
-  body: string;
-  author: string;
-  published: boolean;
-}
-interface CreatePostArgs{
-  data: PostData;
-}
-interface CommentData{
-  text: string;
-  post: string;
-  author: string;
-}
-interface CreateCommentArgs{
-  data: CommentData;
-}
-
-interface DeleteArgs{
-  userID?: string;
-  postID?: string;
-  commentID?: string;
-}
-
-const createUser: IFieldResolver<Parent, Context, CreateUserArgs> = (parent, args, { db }, info) => {
+const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = (parent, args, { db }, info) => {
   const {email} = args.data;
     if( db.dummyUsers.some( user => user.email === email) ){
       throw new Error('User already registered!')
@@ -54,7 +18,7 @@ const createUser: IFieldResolver<Parent, Context, CreateUserArgs> = (parent, arg
     }
 }
 
-const createPost: IFieldResolver<Parent, Context, CreatePostArgs > = (parent, args, { db }, info) => {
+const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = (parent, args, { db }, info) => {
   const {author} = args.data;
   if(db.dummyUsers.some( user => user.id === author )){
     const newPost = {
@@ -68,7 +32,7 @@ const createPost: IFieldResolver<Parent, Context, CreatePostArgs > = (parent, ar
   }
 }
 
-const createComment: IFieldResolver<Parent, Context, CreateCommentArgs> = (parent, args, { db }, info) => {
+const createComment: IFieldResolver<EmptyParent, Context, CreateCommentArgs> = (parent, args, { db }, info) => {
   const {post, author} = args.data;
   const postPublished = db.dummyPosts.some( savedPost => savedPost.id === post && savedPost.published );
   const userExists = db.dummyUsers.some( user => user.id === author );
@@ -84,7 +48,7 @@ const createComment: IFieldResolver<Parent, Context, CreateCommentArgs> = (paren
   }
 }
 
-const deleteUser: IFieldResolver<Parent, Context, DeleteArgs> = (parent, args, { db }, info) => {
+const deleteUser: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db }, info) => {
   const {userID} = args;
   const userIndex = db.dummyUsers.findIndex( user => user.id === userID );
   const userExists = userIndex >= 0;
@@ -107,7 +71,7 @@ const deleteUser: IFieldResolver<Parent, Context, DeleteArgs> = (parent, args, {
   }
 }
 
-const deletePost: IFieldResolver<Parent, Context, DeleteArgs> = (parent, args, { db }, info) => {
+const deletePost: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db }, info) => {
   const {postID} = args;
   const postIndex = db.dummyPosts.findIndex( post => post.id === postID );
   const postExists = postIndex >= 0;
@@ -120,7 +84,7 @@ const deletePost: IFieldResolver<Parent, Context, DeleteArgs> = (parent, args, {
   }
 }
 
-const deleteComment: IFieldResolver<Parent, Context, DeleteArgs> = (parent, args, { db }, info) => {
+const deleteComment: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db }, info) => {
   const {commentID} = args;
   const commentIndex = db.dummyComments.findIndex( comment => comment.id === commentID );
   const commentExists = commentIndex >= 0;
