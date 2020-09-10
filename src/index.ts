@@ -1,5 +1,5 @@
 import { GraphQLServer } from 'graphql-yoga';
-import { db, Database } from './db';
+import { db } from './db';
 import { Query } from './resolvers/Query/Query.res';
 import { Mutation } from './resolvers/Mutation/Mutation.res';
 import { User } from './resolvers/User/User.res';
