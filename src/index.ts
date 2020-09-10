@@ -1,10 +1,14 @@
 import { GraphQLServer } from 'graphql-yoga';
-import { db } from './db';
+import { db, Database } from './db';
 import { Query } from './resolvers/Query.res';
 import { Mutation } from './resolvers/Mutation.res';
 import { User } from './resolvers/User.res';
 import { Post } from './resolvers/Post.res';  
 import { Comment } from './resolvers/Comment.res';
+
+export interface Context {
+  db: Database
+}
 
 const server = new GraphQLServer({
   typeDefs: './src/schema.graphql',
