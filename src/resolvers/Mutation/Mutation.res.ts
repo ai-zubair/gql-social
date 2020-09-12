@@ -1,10 +1,10 @@
 import { uuid } from 'uuidv4';
 import { IResolverObject, IFieldResolver } from 'graphql-tools';
-import { CreateUserArgs, CreatePostArgs, CreateCommentArgs, DeleteArgs } from '../../types/mutation.type';
+import { CreateUserArgs, CreatePostArgs, CreateCommentArgs, DeleteArgs, UserUpdateArgs, PostUpdateArgs, CommentUpdateArgs } from '../../types/mutation.type';
 import { Context, EmptyParent } from '../../types/common.type';
 
 const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = (parent, args, { db }, info) => {
-  const {email} = args.data;
+  const { data:{email} } = args;
     if( db.dummyUsers.some( user => user.email === email) ){
       throw new Error('User already registered!')
     }else{
@@ -18,33 +18,21 @@ const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = (parent
     }
 }
 
-const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = (parent, args, { db }, info) => {
-  const {author} = args.data;
-  if(db.dummyUsers.some( user => user.id === author )){
-    const newPost = {
-      id: uuid(),
-      ...args.data
+const updateUser: IFieldResolver<EmptyParent, Context, UserUpdateArgs> = (parent, args, { db }, info ) => {
+  const { userID, data } = args;
+  const userToUpdate = db.dummyUsers.find( user => user.id === userID);
+  if(userToUpdate){
+    for (const updateKey in data) {
+      const updateValue = data[updateKey];
+      if(updateKey ==="email" && db.dummyUsers.some( user => user.email === updateValue )){
+        throw new Error("Email is already in use!");
+      }else if (updateValue){
+        userToUpdate[updateKey] = updateValue;
+      }
     }
-    db.dummyPosts.push(newPost);
-    return newPost;
+    return userToUpdate;
   }else{
-    throw new Error("User is not registered!")
-  }
-}
-
-const createComment: IFieldResolver<EmptyParent, Context, CreateCommentArgs> = (parent, args, { db }, info) => {
-  const {post, author} = args.data;
-  const postPublished = db.dummyPosts.some( savedPost => savedPost.id === post && savedPost.published );
-  const userExists = db.dummyUsers.some( user => user.id === author );
-  if(postPublished && userExists){
-    const newComment = {
-      id: uuid(),
-      ...args.data
-    }
-    db.dummyComments.push(newComment);
-    return newComment;
-  }else{
-    throw new Error("Post is unpublished or User does not exist!")
+    throw new Error("User does not exist!");
   }
 }
 
@@ -71,6 +59,36 @@ const deleteUser: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, ar
   }
 }
 
+const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = (parent, args, { db }, info) => {
+  const {author} = args.data;
+  if(db.dummyUsers.some( user => user.id === author )){
+    const newPost = {
+      id: uuid(),
+      ...args.data
+    }
+    db.dummyPosts.push(newPost);
+    return newPost;
+  }else{
+    throw new Error("User is not registered!")
+  }
+}
+
+const updatePost: IFieldResolver<EmptyParent, Context, PostUpdateArgs> = (parent, args, { db }, info)=>{
+  const { postID, data } = args;
+  const postToUpdate = db.dummyPosts.find( post => post.id === postID );
+  if(postToUpdate){
+    for (const updateKey in data) {
+      const updateValue = data[updateKey];
+      if(updateValue){
+        postToUpdate[updateKey] = updateValue;
+      }
+    }
+    return postToUpdate;
+  }else{
+    throw new Error("Post does not exist!");
+  }
+}
+
 const deletePost: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db }, info) => {
   const {postID} = args;
   const postIndex = db.dummyPosts.findIndex( post => post.id === postID );
@@ -81,6 +99,38 @@ const deletePost: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, ar
     return deletedPost;
   }else{
     throw new Error("Post does nto exist!");
+  }
+}
+
+const createComment: IFieldResolver<EmptyParent, Context, CreateCommentArgs> = (parent, args, { db }, info) => {
+  const {post, author} = args.data;
+  const postPublished = db.dummyPosts.some( savedPost => savedPost.id === post && savedPost.published );
+  const userExists = db.dummyUsers.some( user => user.id === author );
+  if(postPublished && userExists){
+    const newComment = {
+      id: uuid(),
+      ...args.data
+    }
+    db.dummyComments.push(newComment);
+    return newComment;
+  }else{
+    throw new Error("Post is unpublished or User does not exist!")
+  }
+}
+
+const updateComment: IFieldResolver<EmptyParent, Context, CommentUpdateArgs> = (parent, args, { db }, info)=>{
+  const { commentID, data } = args;
+  const commentToUpdate = db.dummyComments.find( comment => comment.id === commentID );
+  if(commentToUpdate){
+    for (const updateKey in data) {
+      const updateValue = data[updateKey];
+      if(updateValue){
+        commentToUpdate[updateKey] = updateValue;
+      }
+    }
+    return commentToUpdate;
+  }else{
+    throw new Error("Comment does not exist!")
   }
 }
 
@@ -98,10 +148,13 @@ const deleteComment: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent,
 
 const Mutation: IResolverObject = {
   createUser,
-  createPost,
-  createComment,
+  updateUser,
   deleteUser,
+  createPost,
+  updatePost,
   deletePost,
+  createComment,
+  updateComment,
   deleteComment
 }
 

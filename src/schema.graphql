@@ -6,16 +6,25 @@ type Query {
 
 type Mutation {
   createUser( data: UserInputData! ): User!
+  updateUser( userID: ID!, data: UserUpdateData! ): User!
   deleteUser( userID: ID! ): User!
   createPost( data: PostInputData! ): Post!
+  updatePost( postID: ID!, data: PostUpdateData! ): Post!
   deletePost( postID: ID! ): Post!
   createComment( data: CommentInputData! ): Comment!
+  updateComment( commentID: ID!, data: CommentUpdateData! ): Comment!
   deleteComment( commentID: ID! ): Comment!
 }
 
 input UserInputData {
   name: String!
   email: String!
+}
+
+input UserUpdateData {
+  name: String
+  email: String
+  active: Boolean
 }
 
 input PostInputData {
@@ -25,10 +34,20 @@ input PostInputData {
   published: Boolean!
 }
 
+input PostUpdateData{
+  title: String
+  body: String
+  published: Boolean
+}
+
 input CommentInputData {
   text: String!
   post: ID!
   author: ID!
+}
+
+input CommentUpdateData{
+  text: String!
 }
 
 type Post {

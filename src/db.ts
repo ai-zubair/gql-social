@@ -3,6 +3,7 @@ export interface User{
   name: string;
   email: string;
   active: boolean;
+  [key: string]: string | boolean;
 }
 export interface Post{
   id: string;
@@ -10,12 +11,14 @@ export interface Post{
   body: string;
   published: boolean;
   author: string;
+  [key: string]: string | boolean;
 }
 export interface Comment{
   id: string;
   text: string;
   author: string;
   post: string;
+  [key: string]: string;
 }
 export interface Database{
   dummyUsers: User[];
