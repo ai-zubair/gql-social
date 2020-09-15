@@ -16,5 +16,8 @@ export interface PostSubscriptionArgs{
 } 
 
 export interface PostSubscriptionPayload{
-  post: Post;
+  post: {
+    mutation: String;
+    data: Post;
+  };
 }

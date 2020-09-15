@@ -69,7 +69,10 @@ const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = (paren
     }
     db.dummyPosts.push(newPost);
     const postSubscriptionPayload: PostSubscriptionPayload = {
-      post: newPost
+      post: {
+        mutation: MUTATION_TYPE.CREATE,
+        data: newPost
+      }
     }
     pubSub.publish(author,postSubscriptionPayload);
     return newPost;
@@ -78,7 +81,7 @@ const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = (paren
   }
 }
 
-const updatePost: IFieldResolver<EmptyParent, Context, PostUpdateArgs> = (parent, args, { db }, info)=>{
+const updatePost: IFieldResolver<EmptyParent, Context, PostUpdateArgs> = (parent, args, { db, pubSub }, info)=>{
   const { postID, data } = args;
   const postToUpdate = db.dummyPosts.find( post => post.id === postID );
   if(postToUpdate){
@@ -88,19 +91,33 @@ const updatePost: IFieldResolver<EmptyParent, Context, PostUpdateArgs> = (parent
         postToUpdate[updateKey] = updateValue;
       }
     }
+    const postSubscriptionPayload: PostSubscriptionPayload = {
+      post: {
+        mutation: MUTATION_TYPE.UPDATE,
+        data: postToUpdate
+      }
+    }
+    pubSub.publish(postToUpdate.author,postSubscriptionPayload);
     return postToUpdate;
   }else{
     throw new Error("Post does not exist!");
   }
 }
 
-const deletePost: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db }, info) => {
+const deletePost: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db, pubSub }, info) => {
   const {postID} = args;
   const postIndex = db.dummyPosts.findIndex( post => post.id === postID );
   const postExists = postIndex >= 0;
   if(postExists){
     const deletedPost = db.dummyPosts.splice(postIndex, 1)[0];
     db.dummyComments = db.dummyComments.filter( comment => comment.post !== postID );
+    const postSubscriptionPayload: PostSubscriptionPayload = {
+      post: {
+        mutation: MUTATION_TYPE.DELETE,
+        data: deletedPost
+      }
+    }
+    pubSub.publish(deletedPost.author,postSubscriptionPayload);
     return deletedPost;
   }else{
     throw new Error("Post does nto exist!");
