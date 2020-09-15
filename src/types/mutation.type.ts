@@ -1,3 +1,9 @@
+export enum MUTATION_TYPE{
+  CREATE = "CREATE",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE"
+}
+
 export interface UserData{
   name: string;
   email: string;
