@@ -7,28 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id String @id @default(uuid())
-  name String
-  email String @unique
-  active Boolean?
-  posts Post[]
+model User {
+  id      String    @default(uuid()) @id
+  name    String
+  email   String    @unique
+  active  Boolean?
+  Comment Comment[]
+  posts   Post[]
 }
 
-model Post{
-  id String @id @default(uuid())
-  title String 
-  body String
+model Post {
+  id        String    @default(uuid()) @id
+  title     String
+  body      String
   published Boolean?
-  author User @relation(fields: [authorId], references: [id])
-  authorId String
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id])
+  Comment   Comment[]
+
+  @@index([authorId], name: "authorId")
 }
 
-model Comment{
-  id String @id @default(uuid())
-  text String
-  author User @relation(fields: [authorId], references:[id])
-  post Post @relation(fields: [postId], references:[id])
+model Comment {
+  id       String @default(uuid()) @id
+  text     String
   authorId String
-  postId String
+  postId   String
+  author   User   @relation(fields: [authorId], references: [id])
+  post     Post   @relation(fields: [postId], references: [id])
+
+  @@index([authorId], name: "authorId")
+  @@index([postId], name: "postId")
 }

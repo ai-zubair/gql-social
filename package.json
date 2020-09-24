@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prestart:build":"prisma introspect && prisma generate && prisma studio",
     "start:build": "tsc -w",
-    "start:exec": "nodemon -e js,graphql ./build/index.js",
+    "start:exec": "nodemon -e js,graphql,prisma ./build/index.js",
     "start": "concurrently npm:start:*"
   },
   "keywords": [],
