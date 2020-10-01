@@ -4,48 +4,80 @@ import { MUTATION_TYPE, CreateCommentArgs, DeleteArgs, CommentUpdateArgs } from 
 import { Context, EmptyParent } from '../../types/common.type';
 import { CommentSubscriptionPayload } from '../../types/subscription.type';
 import { PubSub } from 'graphql-yoga';
-import { Comment } from '../../db';
+import { Comment } from '@prisma/client';
 
-const createComment: IFieldResolver<EmptyParent, Context, CreateCommentArgs> = (parent, args, { db, pubSub }, info) => {
-  const {post, author} = args.data;
-  const postPublished = db.dummyPosts.some( savedPost => savedPost.id === post && savedPost.published );
-  const userExists = db.dummyUsers.some( user => user.id === author );
-  if(postPublished && userExists){
-    const newComment = {
-      id: uuid(),
-      ...args.data
+const createComment: IFieldResolver<EmptyParent, Context, CreateCommentArgs> = async(parent, args, { prisma, pubSub }, info) => {
+  const {post, author, text} = args.data;
+  const targetPost = await prisma.post.findOne({
+    where: {
+      id: post
+    },
+    select: {
+      published: true
     }
-    db.dummyComments.push(newComment);
-    publishCommentMutation(pubSub, MUTATION_TYPE.CREATE, newComment);
+  })
+  const userExists = await prisma.user.findOne({
+    where: {
+      id: author
+    }
+  })
+  if(targetPost?.published && userExists){
+    const newComment = await prisma.comment.create({
+      data: {
+        text,
+        author:{
+          connect:{
+            id: author
+          }
+        },
+        post:{
+          connect:{
+            id: post
+          }
+        }
+      }
+    })
+    publishCommentMutation(pubSub, MUTATION_TYPE.CREATE, newComment)
     return newComment;
   }else{
     throw new Error("Post is unpublished or User does not exist!")
   }
 }
 
-const updateComment: IFieldResolver<EmptyParent, Context, CommentUpdateArgs> = (parent, args, { db, pubSub }, info)=>{
+const updateComment: IFieldResolver<EmptyParent, Context, CommentUpdateArgs> = async (parent, args, { prisma, pubSub }, info)=>{
   const { commentID, data } = args;
-  const commentToUpdate = db.dummyComments.find( comment => comment.id === commentID );
-  if(commentToUpdate){
-    for (const updateKey in data) {
-      const updateValue = data[updateKey];
-      if(updateValue){
-        commentToUpdate[updateKey] = updateValue;
-      }
+  const commentToUpdate = await prisma.comment.findOne({
+    where:{
+      id: commentID
     }
-    publishCommentMutation(pubSub, MUTATION_TYPE.UPDATE, commentToUpdate);
-    return commentToUpdate;
+  })
+  if(commentToUpdate){
+    const updatedComment = await prisma.comment.update({
+      where:{
+        id: commentID
+      },
+      data
+    })
+    publishCommentMutation(pubSub, MUTATION_TYPE.UPDATE, updatedComment);
+    return updatedComment;
   }else{
     throw new Error("Comment does not exist!")
   }
 }
 
-const deleteComment: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db, pubSub }, info) => {
+const deleteComment: IFieldResolver<EmptyParent, Context, DeleteArgs> = async(parent, args, { prisma, pubSub }, info) => {
   const {commentID} = args;
-  const commentIndex = db.dummyComments.findIndex( comment => comment.id === commentID );
-  const commentExists = commentIndex >= 0;
+  const commentExists = await prisma.comment.findOne({
+    where:{
+      id: commentID
+    }
+  })
   if(commentExists){
-    const deletedComment = db.dummyComments.splice(commentIndex, 1)[0];
+    const deletedComment = await prisma.comment.delete({
+      where:{
+        id: commentID
+      }
+    })
     publishCommentMutation(pubSub, MUTATION_TYPE.DELETE, deletedComment);
     return deletedComment;
   }else{
@@ -60,7 +92,7 @@ function publishCommentMutation(pubSub: PubSub, mutationType: MUTATION_TYPE, mut
       data: mutatedComment
     }
   }
-  pubSub.publish(mutatedComment.post,commentSubscriptionPayload);
+  pubSub.publish(mutatedComment.postId,commentSubscriptionPayload);
 }
 
 export {

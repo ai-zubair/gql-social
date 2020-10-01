@@ -1,4 +1,4 @@
-import { Comment, Post } from '../db';
+import { Comment, Post } from '@prisma/client';
 
 export interface CommentSubscriptionArgs{
   postID: string;

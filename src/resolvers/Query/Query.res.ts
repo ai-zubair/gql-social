@@ -1,5 +1,4 @@
 import { IResolverObject } from 'graphql-tools';
-import { Post, User, Comment } from '../../db';
 import { Context, EmptyParent } from '../../types/common.type';
 
 interface QueryArgs{
@@ -7,24 +6,49 @@ interface QueryArgs{
 }
 
 const Query: IResolverObject<EmptyParent, Context, QueryArgs>  = {
-  posts(parent, args, { db }, info): Post[]{
+  async posts(parent, args, { prisma }, info){
     const keyword = args.keyword;
-    if(keyword){ 
-      return db.dummyPosts.filter( post => post.title.toLowerCase().includes(keyword.toLowerCase()) )
-    }else{
-      return db.dummyPosts;
-    }
+    const postsWithFilter = await prisma.post.findMany({
+      where: {
+        OR:[
+          {
+            title: {
+              contains: keyword
+            }
+          },
+          {
+            body: {
+              contains: keyword
+            }
+          }
+        ]
+      }      
+    })
+    return postsWithFilter;
   },
-  users(parent, args, { db }, info): User[]{
+  async users(parent, args, { prisma }, info){
     const keyword = args.keyword;
-    if(keyword){
-      return db.dummyUsers.filter( user => user.name.toLowerCase().includes(keyword.toLowerCase()) )
-    }else{
-      return db.dummyUsers;
-    }
+    const usersWithFilter = await prisma.user.findMany({
+      where: {
+        OR:[
+          {
+            name: {
+              contains: keyword
+            }
+          },
+          {
+            email: {
+              contains: keyword
+            }
+          }
+        ]
+      }
+    })
+    return usersWithFilter;
   },
-  comments(parent, args, { db }, info): Comment[]{
-    return db.dummyComments;
+  async comments(parent, args, { prisma }, info){
+    const comments = await prisma.comment.findMany();
+    return comments;
   }
 }
 

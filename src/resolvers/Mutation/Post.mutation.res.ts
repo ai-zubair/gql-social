@@ -4,16 +4,28 @@ import { EmptyParent, Context } from '../../types/common.type';
 import { MUTATION_TYPE,CreatePostArgs, PostUpdateArgs, DeleteArgs } from '../../types/mutation.type';
 import { PostSubscriptionPayload } from '../../types/subscription.type';
 import { PubSub } from 'graphql-yoga';
-import { Post } from '../../db';
+import { Post } from '@prisma/client';
 
-const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = (parent, args, { db, pubSub }, info) => {
-  const {author} = args.data;
-  if(db.dummyUsers.some( user => user.id === author )){
-    const newPost = {
-      id: uuid(),
-      ...args.data
+const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = async(parent, args, { prisma, pubSub }, info) => {
+  const { title, body, author, published } = args.data;
+  const authorExists = await prisma.user.findOne({
+    where:{
+      id: author
     }
-    db.dummyPosts.push(newPost);
+  })
+  if(authorExists){
+    const newPost = await prisma.post.create({
+      data:{
+        title,
+        body,
+        published,
+        author:{
+          connect:{
+            id: author
+          }
+        }
+      }
+    })
     publishPostMutation(pubSub, MUTATION_TYPE.CREATE, newPost);
     return newPost;
   }else{
@@ -21,30 +33,52 @@ const createPost: IFieldResolver<EmptyParent, Context, CreatePostArgs > = (paren
   }
 }
 
-const updatePost: IFieldResolver<EmptyParent, Context, PostUpdateArgs> = (parent, args, { db, pubSub }, info)=>{
+const updatePost: IFieldResolver<EmptyParent, Context, PostUpdateArgs> = async(parent, args, { prisma, pubSub }, info)=>{
   const { postID, data } = args;
-  const postToUpdate = db.dummyPosts.find( post => post.id === postID );
-  if(postToUpdate){
-    for (const updateKey in data) {
-      const updateValue = data[updateKey];
-      if(updateValue){
-        postToUpdate[updateKey] = updateValue;
-      }
+  const postToUpdate = await prisma.post.findOne({
+    where:{
+      id: postID
     }
+  })
+  if(postToUpdate){
+    const updatedPost = await prisma.post.update({
+      where:{
+        id: postID
+      },
+      data
+    })
     publishPostMutation(pubSub, MUTATION_TYPE.UPDATE, postToUpdate);
-    return postToUpdate;
+    return updatedPost;
   }else{
     throw new Error("Post does not exist!");
   }
 }
 
-const deletePost: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db, pubSub }, info) => {
-  const {postID} = args;
-  const postIndex = db.dummyPosts.findIndex( post => post.id === postID );
-  const postExists = postIndex >= 0;
+const deletePost: IFieldResolver<EmptyParent, Context, DeleteArgs> = async(parent, args, { prisma, pubSub }, info) => {
+  const { postID } = args;
+  const postExists = await prisma.post.findOne({
+    where:{
+      id: postID
+    }
+  })
   if(postExists){
-    const deletedPost = db.dummyPosts.splice(postIndex, 1)[0];
-    db.dummyComments = db.dummyComments.filter( comment => comment.post !== postID );
+    const updatedPost = await prisma.post.update({
+      where:{
+        id: postID
+      },
+      data:{
+        comments:{
+          deleteMany:{
+            postId: postID
+          }
+        }
+      }
+    })
+    const deletedPost = await prisma.post.delete({
+      where:{
+        id: postID
+      }
+    }) 
     publishPostMutation(pubSub, MUTATION_TYPE.DELETE, deletedPost);
     return deletedPost;
   }else{
@@ -60,7 +94,7 @@ function publishPostMutation(pubSub: PubSub, mutationType: MUTATION_TYPE, mutate
       data: mutatedPost
     }
   }
-  pubSub.publish(mutatedPost.author,postSubscriptionPayload);
+  pubSub.publish(mutatedPost.authorId,postSubscriptionPayload);
 }
 
 export {

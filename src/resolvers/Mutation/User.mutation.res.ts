@@ -3,56 +3,76 @@ import { IFieldResolver } from 'graphql-tools';
 import { EmptyParent, Context } from '../../types/common.type';
 import { CreateUserArgs, UserUpdateArgs, DeleteArgs } from '../../types/mutation.type';
 
-const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = (parent, args, { db }, info) => {
-  const { data:{email} } = args;
-    if( db.dummyUsers.some( user => user.email === email) ){
-      throw new Error('User already registered!')
-    }else{
-      const newUser = {
-        id: uuid(),
-        ...args.data,
-        active: false
-      }
-      db.dummyUsers.push(newUser);
-      return newUser;
+const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = async(parent, args, { prisma }, info) => {
+  const { data :{name, email } } = args;
+  const userExists = await prisma.user.findOne({
+    where:{
+      email
     }
+  })
+  if( userExists ){
+    throw new Error('User already registered!')
+  }else{
+    const newUser = await prisma.user.create({
+      data:{
+        name,
+        email
+      }
+    })
+    return newUser;
+  }
 }
 
-const updateUser: IFieldResolver<EmptyParent, Context, UserUpdateArgs> = (parent, args, { db }, info ) => {
+const updateUser: IFieldResolver<EmptyParent, Context, UserUpdateArgs> = async(parent, args, { prisma }, info ) => {
   const { userID, data } = args;
-  const userToUpdate = db.dummyUsers.find( user => user.id === userID);
-  if(userToUpdate){
-    for (const updateKey in data) {
-      const updateValue = data[updateKey];
-      if(updateKey ==="email" && db.dummyUsers.some( user => user.email === updateValue )){
-        throw new Error("Email is already in use!");
-      }else if (updateValue){
-        userToUpdate[updateKey] = updateValue;
-      }
+  const userToUpdate = await prisma.user.findOne({
+    where:{
+      id: userID
     }
-    return userToUpdate;
+  })
+  if(userToUpdate){
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: userID
+      },
+      data: data
+    })
+    return updatedUser;
   }else{
     throw new Error("User does not exist!");
   }
 }
 
-const deleteUser: IFieldResolver<EmptyParent, Context, DeleteArgs> = (parent, args, { db }, info) => {
+const deleteUser: IFieldResolver<EmptyParent, Context, DeleteArgs> = async(parent, args, { prisma }, info) => {
   const {userID} = args;
-  const userIndex = db.dummyUsers.findIndex( user => user.id === userID );
-  const userExists = userIndex >= 0;
+  const userExists = await prisma.user.findOne({
+    where:{
+      id: userID
+    }
+  });
   if(userExists){
-    const deletedUser = db.dummyUsers.splice(userIndex, 1)[0];
-
-    db.dummyPosts = db.dummyPosts.filter( post => {
-      const postByUser = post.author === userID;
-      if(postByUser){
-        db.dummyComments = db.dummyComments.filter( comment => comment.post !== post.id );
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: userID
+      },
+      data:{
+        posts:{
+          deleteMany:{
+            authorId: userID
+          }
+        },
+        comments:{
+          deleteMany:{
+            authorId: userID
+          }
+        }
       }
-      return !postByUser;
     })
-
-    db.dummyComments = db.dummyComments.filter( comment => comment.author !== userID );
-
+    const deletedUser = await prisma.user.delete({
+      where:{
+        id: userID
+      }
+    })
     return deletedUser;
   }else{
     throw new Error("User does not exist!")

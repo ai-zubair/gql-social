@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["connectOrCreate"]
 }
 
 datasource db {
@@ -8,12 +9,12 @@ datasource db {
 }
 
 model User {
-  id      String    @default(uuid()) @id
-  name    String
-  email   String    @unique
-  active  Boolean?
-  Comment Comment[]
-  posts   Post[]
+  id       String    @default(uuid()) @id
+  name     String
+  email    String    @unique
+  active   Boolean?  @default(false)
+  comments Comment[]
+  posts    Post[]
 }
 
 model Post {
@@ -23,7 +24,7 @@ model Post {
   published Boolean?
   authorId  String
   author    User      @relation(fields: [authorId], references: [id])
-  Comment   Comment[]
+  comments  Comment[]
 
   @@index([authorId], name: "authorId")
 }

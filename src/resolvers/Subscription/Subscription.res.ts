@@ -1,11 +1,17 @@
+import { prismaVersion } from '@prisma/client';
 import { IResolverObject, IResolverOptions } from 'graphql-tools';
 import { EmptyParent, Context} from '../../types/common.type';
 import { CommentSubscriptionArgs, PostSubscriptionArgs } from '../../types/subscription.type';
 
 const comment: IResolverOptions<EmptyParent, Context, CommentSubscriptionArgs> = {
-  subscribe(parent, { postID }, { db, pubSub }, info){
-    const postToSubscribeTo = db.dummyPosts.find( post => post.id === postID );
+  async subscribe(parent, { postID }, { prisma, pubSub }, info){
+    const postToSubscribeTo = await prisma.post.findOne({
+      where:{
+        id: postID
+      }
+    })
     if(postToSubscribeTo){
+      console.log("Subscribed to the post");
       return pubSub.asyncIterator(postID);
     }else{
       throw new Error("Post does not exist!")
@@ -14,8 +20,12 @@ const comment: IResolverOptions<EmptyParent, Context, CommentSubscriptionArgs> =
 }
 
 const post: IResolverOptions<EmptyParent, Context, PostSubscriptionArgs> = {
-  subscribe(parent, { userID }, { db, pubSub }, info){
-    const userToSubscribeTo = db.dummyUsers.find( user => user.id === userID );
+  async subscribe(parent, { userID }, { prisma, pubSub }, info){
+    const userToSubscribeTo = await prisma.user.findOne({
+      where:{
+        id: userID
+      }
+    })
     if(userToSubscribeTo){
       return pubSub.asyncIterator(userID);
     }else{

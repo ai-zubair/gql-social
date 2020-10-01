@@ -1,13 +1,23 @@
 import { IResolverObject } from 'graphql-tools';
-import { User } from '../../db';
 import { Context, EmptyArgs } from '../../types/common.type';
+import { User } from '@prisma/client';
 
 const User: IResolverObject<User, Context, EmptyArgs> = {
-  posts(parent, args, { db }, info){
-    return db.dummyPosts.filter( post => post.author === parent.id)
+  async posts(parent, args, { prisma }, info){
+    const userPosts = await prisma.post.findMany({
+      where:{
+        authorId: parent.id
+      }
+    })
+    return userPosts;
   },
-  comments(parent, args, { db }, info){
-    return db.dummyComments.filter( comment => comment.author === parent.id )
+  async comments(parent, args, { prisma }, info){
+    const userComments = await prisma.comment.findMany({
+      where: {
+        authorId: parent.id
+      }
+    })
+    return userComments;
   }
 };
 

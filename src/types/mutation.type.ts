@@ -37,7 +37,7 @@ export interface UserDataUpdate{
 }
 
 export interface UserUpdateArgs{
-  userID: String;
+  userID: string;
   data: UserDataUpdate;
 }
 
