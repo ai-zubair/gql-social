@@ -3,7 +3,7 @@ import { Comment, prismaVersion } from '@prisma/client';
 import { Context, EmptyArgs } from '../../types/common.type';
 
 const Comment: IResolverObject<Comment, Context, EmptyArgs> = {
-  async author(parent, args, { prisma ,db }, info){
+  async author(parent, args, { prisma }, info){
     const commentAuthor = await prisma.user.findOne({
       where:{
         id: parent.authorId

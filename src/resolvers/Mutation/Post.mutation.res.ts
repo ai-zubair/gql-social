@@ -1,4 +1,3 @@
-import { uuid } from 'uuidv4';
 import { IFieldResolver } from 'graphql-tools';
 import { EmptyParent, Context } from '../../types/common.type';
 import { MUTATION_TYPE,CreatePostArgs, PostUpdateArgs, DeleteArgs } from '../../types/mutation.type';

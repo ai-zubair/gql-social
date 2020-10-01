@@ -1,4 +1,3 @@
-import { prismaVersion } from '@prisma/client';
 import { IResolverObject, IResolverOptions } from 'graphql-tools';
 import { EmptyParent, Context} from '../../types/common.type';
 import { CommentSubscriptionArgs, PostSubscriptionArgs } from '../../types/subscription.type';
