@@ -1,9 +1,10 @@
+import { hash } from 'bcryptjs';
 import { IFieldResolver } from 'graphql-tools';
 import { EmptyParent, Context } from '../../types/common.type';
 import { CreateUserArgs, UserUpdateArgs, DeleteArgs } from '../../types/mutation.type';
 
 const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = async(parent, args, { prisma }, info) => {
-  const { data :{name, email } } = args;
+  const { data :{name, email, password } } = args;
   const userExists = await prisma.user.findOne({
     where:{
       email
@@ -12,10 +13,12 @@ const createUser: IFieldResolver<EmptyParent, Context, CreateUserArgs> = async(p
   if( userExists ){
     throw new Error('User already registered!')
   }else{
+    const hashedPassword = await hash(password, 10);
     const newUser = await prisma.user.create({
       data:{
         name,
-        email
+        email,
+        password: hashedPassword
       }
     })
     return newUser;
