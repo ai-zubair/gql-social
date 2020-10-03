@@ -1,12 +1,13 @@
 import { IFieldResolver } from 'graphql-tools';
-import { EmptyParent, ContextWithRequestResponse } from '../../types/common.type';
+import { EmptyParent, ContextWithRequestResponse, AuthTokenPayload } from '../../types/common.type';
 import { MUTATION_TYPE,CreatePostArgs, PostUpdateArgs, DeleteArgs } from '../../types/mutation.type';
 import { PostSubscriptionPayload } from '../../types/subscription.type';
 import { PubSub } from 'graphql-yoga';
 import { Post } from '@prisma/client';
 
-const createPost: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreatePostArgs > = async(parent, args, { prisma, pubSub }, info) => {
-  const { title, body, author, published } = args.data;
+const createPost: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreatePostArgs > = async(parent, args, { prisma, pubSub, request, authenticateUser }, info) => {
+  const author = authenticateUser(request);
+  const { title, body, published } = args.data;
   const authorExists = await prisma.user.findOne({
     where:{
       id: author

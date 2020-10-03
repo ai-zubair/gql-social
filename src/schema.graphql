@@ -42,7 +42,6 @@ input UserUpdateData {
 input PostInputData {
   title: String!
   body: String!
-  author: String!
   published: Boolean!
 }
 

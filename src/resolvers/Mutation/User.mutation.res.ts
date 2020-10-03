@@ -1,7 +1,7 @@
 import { hash, compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { IFieldResolver } from 'graphql-tools';
-import { EmptyParent, ContextWithRequestResponse } from '../../types/common.type';
+import { EmptyParent, ContextWithRequestResponse, AuthTokenPayload } from '../../types/common.type';
 import { UserLoginArgs, CreateUserArgs, UserUpdateArgs, DeleteArgs } from '../../types/mutation.type';
 import { User } from '@prisma/client';
 
@@ -16,7 +16,10 @@ const loginUser:IFieldResolver<EmptyParent, ContextWithRequestResponse, UserLogi
     const {password: userHashedPassword} = registeredUser;
     const isCorrectPassword = await compare(password, userHashedPassword);
     if(isCorrectPassword){
-      const authToken = sign({id: registeredUser.id},"serversecretkey");
+      const authTokenPayload: AuthTokenPayload = {
+        userID: registeredUser.id
+      }
+      const authToken = sign(authTokenPayload,"serversecretkey");
       return {
         auth: authToken,
         user: registeredUser
@@ -47,7 +50,10 @@ const createUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, Create
         password: hashedPassword
       }
     });
-    const authToken = sign({id: newUser.id},"serversecretkey");
+    const authTokenPayload: AuthTokenPayload = {
+      userID: newUser.id
+    }
+    const authToken = sign(authTokenPayload,"serversecretkey");
     return {
       auth: authToken,
       user: newUser

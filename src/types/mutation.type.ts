@@ -25,7 +25,6 @@ export interface CreateUserArgs{
 export interface PostData{
   title: string;
   body: string;
-  author: string;
   published: boolean;
 }
 export interface CreatePostArgs{

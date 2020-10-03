@@ -11,10 +11,15 @@ export interface EmptyParent{
 }
 
 export interface Context {
-  pubSub: PubSub,
-  prisma: PrismaClient
+  pubSub: PubSub;
+  prisma: PrismaClient;
 }
 
 export interface ContextWithRequestResponse extends Context{
   request: Request;
+  authenticateUser(request: Request): string;
+}
+
+export interface AuthTokenPayload {
+  userID: string;
 }
