@@ -4,6 +4,15 @@ export enum MUTATION_TYPE{
   DELETE = "DELETE"
 }
 
+export interface UserLoginData{
+  email: string;
+  password: string;
+}
+
+export interface UserLoginArgs{
+  data: UserLoginData;
+}
+
 export interface UserData{
   name: string;
   email: string;
