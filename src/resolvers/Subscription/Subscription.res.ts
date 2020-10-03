@@ -1,8 +1,8 @@
 import { IResolverObject, IResolverOptions } from 'graphql-tools';
-import { EmptyParent, Context} from '../../types/common.type';
+import { EmptyParent, ContextWithRequestResponse} from '../../types/common.type';
 import { CommentSubscriptionArgs, PostSubscriptionArgs } from '../../types/subscription.type';
 
-const comment: IResolverOptions<EmptyParent, Context, CommentSubscriptionArgs> = {
+const comment: IResolverOptions<EmptyParent, ContextWithRequestResponse, CommentSubscriptionArgs> = {
   async subscribe(parent, { postID }, { prisma, pubSub }, info){
     const postToSubscribeTo = await prisma.post.findOne({
       where:{
@@ -18,7 +18,7 @@ const comment: IResolverOptions<EmptyParent, Context, CommentSubscriptionArgs> =
   }
 }
 
-const post: IResolverOptions<EmptyParent, Context, PostSubscriptionArgs> = {
+const post: IResolverOptions<EmptyParent, ContextWithRequestResponse, PostSubscriptionArgs> = {
   async subscribe(parent, { userID }, { prisma, pubSub }, info){
     const userToSubscribeTo = await prisma.user.findOne({
       where:{

@@ -1,11 +1,11 @@
 import { IResolverObject } from 'graphql-tools';
-import { Context, EmptyParent } from '../../types/common.type';
+import { ContextWithRequestResponse, EmptyParent } from '../../types/common.type';
 
 interface QueryArgs{
   keyword: string;
 }
 
-const Query: IResolverObject<EmptyParent, Context, QueryArgs>  = {
+const Query: IResolverObject<EmptyParent, ContextWithRequestResponse, QueryArgs>  = {
   async posts(parent, args, { prisma }, info){
     const keyword = args.keyword;
     const postsWithFilter = await prisma.post.findMany({

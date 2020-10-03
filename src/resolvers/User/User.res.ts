@@ -1,8 +1,8 @@
 import { IResolverObject } from 'graphql-tools';
-import { Context, EmptyArgs } from '../../types/common.type';
+import { ContextWithRequestResponse, EmptyArgs } from '../../types/common.type';
 import { User } from '@prisma/client';
 
-const User: IResolverObject<User, Context, EmptyArgs> = {
+const User: IResolverObject<User, ContextWithRequestResponse, EmptyArgs> = {
   async posts(parent, args, { prisma }, info){
     const userPosts = await prisma.post.findMany({
       where:{

@@ -1,8 +1,8 @@
 import { IResolverObject } from 'graphql-tools';
 import { Comment, prismaVersion } from '@prisma/client';
-import { Context, EmptyArgs } from '../../types/common.type';
+import { ContextWithRequestResponse, EmptyArgs } from '../../types/common.type';
 
-const Comment: IResolverObject<Comment, Context, EmptyArgs> = {
+const Comment: IResolverObject<Comment, ContextWithRequestResponse, EmptyArgs> = {
   async author(parent, args, { prisma }, info){
     const commentAuthor = await prisma.user.findOne({
       where:{

@@ -1,11 +1,11 @@
 import { IFieldResolver } from 'graphql-tools';
 import { MUTATION_TYPE, CreateCommentArgs, DeleteArgs, CommentUpdateArgs } from '../../types/mutation.type';
-import { Context, EmptyParent } from '../../types/common.type';
+import { ContextWithRequestResponse, EmptyParent } from '../../types/common.type';
 import { CommentSubscriptionPayload } from '../../types/subscription.type';
 import { PubSub } from 'graphql-yoga';
 import { Comment } from '@prisma/client';
 
-const createComment: IFieldResolver<EmptyParent, Context, CreateCommentArgs> = async(parent, args, { prisma, pubSub }, info) => {
+const createComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreateCommentArgs> = async(parent, args, { prisma, pubSub }, info) => {
   const {post, author, text} = args.data;
   const targetPost = await prisma.post.findOne({
     where: {
@@ -43,7 +43,7 @@ const createComment: IFieldResolver<EmptyParent, Context, CreateCommentArgs> = a
   }
 }
 
-const updateComment: IFieldResolver<EmptyParent, Context, CommentUpdateArgs> = async (parent, args, { prisma, pubSub }, info)=>{
+const updateComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, CommentUpdateArgs> = async (parent, args, { prisma, pubSub }, info)=>{
   const { commentID, data } = args;
   const commentToUpdate = await prisma.comment.findOne({
     where:{
@@ -64,7 +64,7 @@ const updateComment: IFieldResolver<EmptyParent, Context, CommentUpdateArgs> = a
   }
 }
 
-const deleteComment: IFieldResolver<EmptyParent, Context, DeleteArgs> = async(parent, args, { prisma, pubSub }, info) => {
+const deleteComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeleteArgs> = async(parent, args, { prisma, pubSub }, info) => {
   const {commentID} = args;
   const commentExists = await prisma.comment.findOne({
     where:{
