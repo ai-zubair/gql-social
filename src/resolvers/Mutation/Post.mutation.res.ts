@@ -1,16 +1,16 @@
 import { IFieldResolver } from 'graphql-tools';
 import { EmptyParent, ContextWithRequestResponse, AuthTokenPayload } from '../../types/common.type';
-import { MUTATION_TYPE,CreatePostArgs, PostUpdateArgs, DeleteArgs } from '../../types/mutation.type';
+import { MUTATION_TYPE,CreatePostArgs, PostUpdateArgs, DeleteArgs, DeletePostArgs } from '../../types/mutation.type';
 import { PostSubscriptionPayload } from '../../types/subscription.type';
 import { PubSub } from 'graphql-yoga';
 import { Post } from '@prisma/client';
 
 const createPost: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreatePostArgs > = async(parent, args, { prisma, pubSub, request, authenticateUser }, info) => {
-  const author = authenticateUser(request);
+  const authorID = authenticateUser(request);
   const { title, body, published } = args.data;
   const authorExists = await prisma.user.findOne({
     where:{
-      id: author
+      id: authorID
     }
   })
   if(authorExists){
@@ -21,7 +21,7 @@ const createPost: IFieldResolver<EmptyParent, ContextWithRequestResponse, Create
         published,
         author:{
           connect:{
-            id: author
+            id: authorID
           }
         }
       }
@@ -33,11 +33,19 @@ const createPost: IFieldResolver<EmptyParent, ContextWithRequestResponse, Create
   }
 }
 
-const updatePost: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostUpdateArgs> = async(parent, args, { prisma, pubSub }, info)=>{
+const updatePost: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostUpdateArgs> = async(parent, args, { prisma, pubSub, request, authenticateUser }, info)=>{
+  const userID = authenticateUser(request);
   const { postID, data } = args;
-  const postToUpdate = await prisma.post.findOne({
+  const [postToUpdate] = await prisma.post.findMany({
     where:{
-      id: postID
+      AND:[
+        {
+          id: postID
+        },
+        {
+          authorId: userID
+        }
+      ]
     }
   })
   if(postToUpdate){
@@ -54,13 +62,22 @@ const updatePost: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostUp
   }
 }
 
-const deletePost: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeleteArgs> = async(parent, args, { prisma, pubSub }, info) => {
+const deletePost: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeletePostArgs> = async(parent, args, { prisma, pubSub, request, authenticateUser }, info) => {
+  const userID = authenticateUser(request);
   const { postID } = args;
-  const postExists = await prisma.post.findOne({
+  const [postExists] = await prisma.post.findMany({
     where:{
-      id: postID
+      AND:[
+        {
+          id: postID
+        },
+        {
+          authorId: userID
+        }
+      ]
     }
   })
+
   if(postExists){
     const updatedPost = await prisma.post.update({
       where:{
@@ -82,7 +99,7 @@ const deletePost: IFieldResolver<EmptyParent, ContextWithRequestResponse, Delete
     publishPostMutation(pubSub, MUTATION_TYPE.DELETE, deletedPost);
     return deletedPost;
   }else{
-    throw new Error("Post does nto exist!");
+    throw new Error("Post does not exist!");
   }
 }
 

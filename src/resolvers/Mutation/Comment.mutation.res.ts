@@ -1,12 +1,13 @@
 import { IFieldResolver } from 'graphql-tools';
-import { MUTATION_TYPE, CreateCommentArgs, DeleteArgs, CommentUpdateArgs } from '../../types/mutation.type';
+import { MUTATION_TYPE, CreateCommentArgs, DeleteArgs, CommentUpdateArgs, DeleteCommentArgs } from '../../types/mutation.type';
 import { ContextWithRequestResponse, EmptyParent } from '../../types/common.type';
 import { CommentSubscriptionPayload } from '../../types/subscription.type';
 import { PubSub } from 'graphql-yoga';
 import { Comment } from '@prisma/client';
 
-const createComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreateCommentArgs> = async(parent, args, { prisma, pubSub }, info) => {
-  const {post, author, text} = args.data;
+const createComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreateCommentArgs> = async(parent, args, { prisma, pubSub, authenticateUser, request }, info) => {
+  const userID = authenticateUser(request)
+  const {post, text} = args.data;
   const targetPost = await prisma.post.findOne({
     where: {
       id: post
@@ -15,18 +16,14 @@ const createComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, Cre
       published: true
     }
   })
-  const userExists = await prisma.user.findOne({
-    where: {
-      id: author
-    }
-  })
-  if(targetPost?.published && userExists){
+  
+  if(targetPost?.published && userID){
     const newComment = await prisma.comment.create({
       data: {
         text,
         author:{
           connect:{
-            id: author
+            id: userID
           }
         },
         post:{
@@ -43,11 +40,19 @@ const createComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, Cre
   }
 }
 
-const updateComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, CommentUpdateArgs> = async (parent, args, { prisma, pubSub }, info)=>{
+const updateComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, CommentUpdateArgs> = async (parent, args, { prisma, pubSub, request, authenticateUser }, info)=>{
+  const userID = authenticateUser(request);
   const { commentID, data } = args;
-  const commentToUpdate = await prisma.comment.findOne({
+  const [commentToUpdate] = await prisma.comment.findMany({
     where:{
-      id: commentID
+      AND: [
+        {
+          id: commentID
+        },
+        {
+          authorId: userID
+        }
+      ]
     }
   })
   if(commentToUpdate){
@@ -64,11 +69,19 @@ const updateComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, Com
   }
 }
 
-const deleteComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeleteArgs> = async(parent, args, { prisma, pubSub }, info) => {
+const deleteComment: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeleteCommentArgs> = async(parent, args, { prisma, pubSub, authenticateUser, request }, info) => {
+  const userID = authenticateUser(request);
   const {commentID} = args;
-  const commentExists = await prisma.comment.findOne({
+  const [commentExists] = await prisma.comment.findMany({
     where:{
-      id: commentID
+      AND:[
+        {
+          id: commentID
+        },
+        {
+          authorId: userID
+        }
+      ]
     }
   })
   if(commentExists){

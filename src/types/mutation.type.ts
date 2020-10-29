@@ -33,7 +33,6 @@ export interface CreatePostArgs{
 export interface CommentData{
   text: string;
   post: string;
-  author: string;
 }
 export interface CreateCommentArgs{
   data: CommentData;
@@ -46,7 +45,6 @@ export interface UserDataUpdate{
 }
 
 export interface UserUpdateArgs{
-  userID: string;
   data: UserDataUpdate;
 }
 
@@ -72,7 +70,13 @@ export interface CommentUpdateArgs{
   data: CommentDataUpdate;
 }
 export interface DeleteArgs{
-  userID?: string;
-  postID?: string;
-  commentID?: string;
+  
+}
+
+export interface DeletePostArgs {
+  postID: string;
+}
+
+export interface DeleteCommentArgs{
+  commentID: string;
 }

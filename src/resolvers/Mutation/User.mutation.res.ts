@@ -61,8 +61,9 @@ const createUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, Create
   }
 }
 
-const updateUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, UserUpdateArgs> = async(parent, args, { prisma }, info ) => {
-  const { userID, data } = args;
+const updateUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, UserUpdateArgs> = async(parent, args, { prisma, request, authenticateUser }, info ) => {
+  const userID = authenticateUser(request);
+  const { data } = args;
   const userToUpdate = await prisma.user.findOne({
     where:{
       id: userID
@@ -81,8 +82,8 @@ const updateUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, UserUp
   }
 }
 
-const deleteUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeleteArgs> = async(parent, args, { prisma }, info) => {
-  const {userID} = args;
+const deleteUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeleteArgs> = async(parent, args, { prisma, request, authenticateUser }, info) => {
+  const userID = authenticateUser(request)
   const userExists = await prisma.user.findOne({
     where:{
       id: userID
