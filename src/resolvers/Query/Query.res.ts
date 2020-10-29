@@ -9,6 +9,16 @@ interface PostQueryArgs{
   postID: string;
 }
 
+const me: IFieldResolver<EmptyParent, ContextWithRequestResponse, EmptyArgs> = async(parent, args, {prisma, authenticateUser, request}, info)=>{
+  const userID = authenticateUser(request);
+  const userProfile = await prisma.user.findOne({
+    where:{
+      id: userID
+    }
+  });
+  return userProfile;
+}
+
 const post: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostQueryArgs> = async(parent, {postID}, {prisma, authenticateUser, request}, info)=>{
   let requestedPost = await prisma.post.findOne({
     where:{
@@ -85,7 +95,8 @@ const comments: IFieldResolver<EmptyParent, ContextWithRequestResponse, EmptyArg
   return comments;
 }
 
-const Query = { 
+const Query = {
+  me, 
   posts,
   post,
   users,
