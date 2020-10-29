@@ -1,5 +1,6 @@
 type Query {
   posts(keyword: String): [Post!]!
+  post(postID: ID!): Post
   users(keyword: String): [User!]!
   comments: [Comment!]!
 }
