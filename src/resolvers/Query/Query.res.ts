@@ -48,6 +48,19 @@ const post: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostQueryArg
   }
 }
 
+const myPosts: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> = async(parent, {keyword}, {prisma, authenticateUser, request}, info)=>{
+  const userID = authenticateUser(request);
+  const userPosts = await prisma.post.findMany({
+    where:{
+      authorId: userID,
+      title:{
+        contains: keyword
+      }
+    }
+  })
+  return userPosts;
+}
+
 const posts: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> = async(parent, args, { prisma }, info)=>{
   const keyword = args.keyword;
   const postsWithFilter = await prisma.post.findMany({
@@ -56,12 +69,14 @@ const posts: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> 
         {
           title: {
             contains: keyword
-          }
+          },
+          published: true
         },
         {
           body: {
             contains: keyword
-          }
+          },
+          published: true
         }
       ]
     }      
@@ -97,8 +112,9 @@ const comments: IFieldResolver<EmptyParent, ContextWithRequestResponse, EmptyArg
 
 const Query = {
   me, 
-  posts,
   post,
+  myPosts,
+  posts,
   users,
   comments
  };
