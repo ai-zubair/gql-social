@@ -1,12 +1,12 @@
 import { IResolverObject } from 'graphql-tools';
-import { ContextWithRequestResponse, EmptyArgs } from '../../types/common.type';
+import { ClientStore, ContextWithRequestResponse, EmptyArgs } from '../../types/common.type';
 import { User } from '@prisma/client';
 
 const User: IResolverObject<User, ContextWithRequestResponse, EmptyArgs> = {
   email(parent, args, {authenticateUser, request}, info){
     const currentUserID = parent.id;
     try{
-      const authenticatedUserID = authenticateUser(request);
+      const authenticatedUserID = authenticateUser(request.headers as ClientStore);
       return currentUserID === authenticatedUserID ? parent.email : null;
     }catch{
       return null;

@@ -1,5 +1,5 @@
 import { IResolverObject, IFieldResolver } from 'graphql-tools';
-import { Context, ContextWithRequestResponse, EmptyArgs, EmptyParent } from '../../types/common.type';
+import { ClientStore, Context, ContextWithRequestResponse, EmptyArgs, EmptyParent } from '../../types/common.type';
 
 interface QueryArgs{
   keyword: string;
@@ -10,7 +10,7 @@ interface PostQueryArgs{
 }
 
 const me: IFieldResolver<EmptyParent, ContextWithRequestResponse, EmptyArgs> = async(parent, args, {prisma, authenticateUser, request}, info)=>{
-  const userID = authenticateUser(request);
+  const userID = authenticateUser(request.headers as ClientStore);
   const userProfile = await prisma.user.findOne({
     where:{
       id: userID
@@ -31,7 +31,7 @@ const post: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostQueryArg
   if(requestedPost.published){
     return requestedPost;
   }else{
-    const userID = authenticateUser(request);
+    const userID = authenticateUser(request.headers as ClientStore);
     const [userDraft] = await prisma.post.findMany({
       where:{
         AND:[
@@ -49,7 +49,7 @@ const post: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostQueryArg
 }
 
 const myPosts: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> = async(parent, {keyword}, {prisma, authenticateUser, request}, info)=>{
-  const userID = authenticateUser(request);
+  const userID = authenticateUser(request.headers as ClientStore);
   const userPosts = await prisma.post.findMany({
     where:{
       authorId: userID,
@@ -88,18 +88,9 @@ const users: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> 
   const keyword = args.keyword;
   const usersWithFilter = await prisma.user.findMany({
     where: {
-      OR:[
-        {
-          name: {
-            contains: keyword
-          }
-        },
-        {
-          email: {
-            contains: keyword
-          }
-        }
-      ]
+      name: {
+        contains: keyword
+      }
     }
   })
   return usersWithFilter;
