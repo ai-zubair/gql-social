@@ -1,5 +1,7 @@
 import { Request } from 'express';
 import { PubSub } from 'graphql-subscriptions';
+import { ExecutionParams } from 'subscriptions-transport-ws';
+import { IncomingHttpHeaders } from 'http';
 import { PrismaClient } from "@prisma/client";
 
 export interface EmptyArgs{
@@ -17,7 +19,12 @@ export interface Context {
 
 export interface ContextWithRequestResponse extends Context{
   request: Request;
-  authenticateUser(request: Request): string;
+  connection: ExecutionParams;
+  authenticateUser(dataStore: ClientStore): string;
+}
+
+export interface ClientStore extends IncomingHttpHeaders{
+  "x-auth": string;
 }
 
 export interface AuthTokenPayload {
