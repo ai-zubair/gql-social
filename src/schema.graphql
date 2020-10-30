@@ -80,7 +80,7 @@ type Post {
 type User {
   id: ID!
   name: String!
-  email: String!
+  email: String
   active: Boolean!
   posts: [Post!]!
   comments: [Comment!]!

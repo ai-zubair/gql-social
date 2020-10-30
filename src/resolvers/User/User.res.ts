@@ -3,6 +3,15 @@ import { ContextWithRequestResponse, EmptyArgs } from '../../types/common.type';
 import { User } from '@prisma/client';
 
 const User: IResolverObject<User, ContextWithRequestResponse, EmptyArgs> = {
+  email(parent, args, {authenticateUser, request}, info){
+    const currentUserID = parent.id;
+    try{
+      const authenticatedUserID = authenticateUser(request);
+      return currentUserID === authenticatedUserID ? parent.email : null;
+    }catch{
+      return null;
+    }
+  },
   async posts(parent, args, { prisma }, info){
     const userPosts = await prisma.post.findMany({
       where:{
