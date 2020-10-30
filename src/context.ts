@@ -8,7 +8,7 @@ export const authenticateUser = (dataStore: ClientStore): string=>{
   const authToken = dataStore["x-auth"];
   if(authToken){
     try{
-      const tokenPayload = verify(authToken as string, "serversecretkey") as AuthTokenPayload;
+      const tokenPayload = verify(authToken as string, serverSecret) as AuthTokenPayload;
       return tokenPayload.userID;
     }catch(err){
       throw new Error("Authentication Failed!");

@@ -20,7 +20,7 @@ const loginUser:IFieldResolver<EmptyParent, ContextWithRequestResponse, UserLogi
         userID: registeredUser.id
       }
       const authToken = sign(authTokenPayload,serverSecret,{
-        expiresIn: "1s"
+        expiresIn: "1d"
       });
       return {
         auth: authToken,
@@ -56,7 +56,7 @@ const createUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, Create
       userID: newUser.id
     }
     const authToken = sign(authTokenPayload,serverSecret,{
-      expiresIn: "1s"
+      expiresIn: "1d"
     });
     return {
       auth: authToken,
