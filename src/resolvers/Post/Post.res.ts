@@ -4,7 +4,6 @@ import { ContextWithRequestResponse, EmptyArgs } from '../../types/common.type';
 
 const Post: IResolverObject<Post, ContextWithRequestResponse, EmptyArgs> = {
   async author(parent, args, { prisma }, info){
-    console.log(" I WAS CALLED MAN!")
     const postAuthor = await prisma.user.findOne({
       where: {
         id: parent.authorId

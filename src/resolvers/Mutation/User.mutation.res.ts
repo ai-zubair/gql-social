@@ -1,11 +1,11 @@
 import { hash, compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { IFieldResolver } from 'graphql-tools';
-import { EmptyParent, ContextWithRequestResponse, AuthTokenPayload } from '../../types/common.type';
+import { EmptyParent, ContextWithRequestResponse, AuthTokenPayload, ClientStore } from '../../types/common.type';
 import { UserLoginArgs, CreateUserArgs, UserUpdateArgs, DeleteArgs } from '../../types/mutation.type';
 import { User } from '@prisma/client';
 
-const loginUser:IFieldResolver<EmptyParent, ContextWithRequestResponse, UserLoginArgs> = async(parent, args, {prisma}, info):Promise<{auth: string, user: User}> =>{
+const loginUser:IFieldResolver<EmptyParent, ContextWithRequestResponse, UserLoginArgs> = async(parent, args, {prisma, serverSecret}, info):Promise<{auth: string, user: User}> =>{
   const { data:{email, password}} = args;
   const registeredUser = await prisma.user.findOne({
     where:{
@@ -19,7 +19,9 @@ const loginUser:IFieldResolver<EmptyParent, ContextWithRequestResponse, UserLogi
       const authTokenPayload: AuthTokenPayload = {
         userID: registeredUser.id
       }
-      const authToken = sign(authTokenPayload,"serversecretkey");
+      const authToken = sign(authTokenPayload,serverSecret,{
+        expiresIn: "1s"
+      });
       return {
         auth: authToken,
         user: registeredUser
@@ -32,7 +34,7 @@ const loginUser:IFieldResolver<EmptyParent, ContextWithRequestResponse, UserLogi
   }
 }
 
-const createUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreateUserArgs> = async(parent, args, { prisma }, info): Promise<{auth: string,user: User}> => {
+const createUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, CreateUserArgs> = async(parent, args, { prisma, serverSecret }, info): Promise<{auth: string,user: User}> => {
   const { data :{name, email, password } } = args;
   const userExists = await prisma.user.findOne({
     where:{
@@ -53,7 +55,9 @@ const createUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, Create
     const authTokenPayload: AuthTokenPayload = {
       userID: newUser.id
     }
-    const authToken = sign(authTokenPayload,"serversecretkey");
+    const authToken = sign(authTokenPayload,serverSecret,{
+      expiresIn: "1s"
+    });
     return {
       auth: authToken,
       user: newUser
@@ -62,7 +66,7 @@ const createUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, Create
 }
 
 const updateUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, UserUpdateArgs> = async(parent, args, { prisma, request, authenticateUser }, info ) => {
-  const userID = authenticateUser(request);
+  const userID = authenticateUser(request.headers as ClientStore);
   const { data } = args;
   const userToUpdate = await prisma.user.findOne({
     where:{
@@ -83,7 +87,7 @@ const updateUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, UserUp
 }
 
 const deleteUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, DeleteArgs> = async(parent, args, { prisma, request, authenticateUser }, info) => {
-  const userID = authenticateUser(request)
+  const userID = authenticateUser(request.headers as ClientStore)
   const userExists = await prisma.user.findOne({
     where:{
       id: userID

@@ -21,6 +21,7 @@ export interface ContextWithRequestResponse extends Context{
   request: Request;
   connection: ExecutionParams;
   authenticateUser(dataStore: ClientStore): string;
+  serverSecret: string;
 }
 
 export interface ClientStore extends IncomingHttpHeaders{
