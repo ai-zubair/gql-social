@@ -74,6 +74,9 @@ const updateUser: IFieldResolver<EmptyParent, ContextWithRequestResponse, UserUp
     }
   })
   if(userToUpdate){
+    if(data.password){
+      data.password = await hash(data.password, 10);
+    }
     const updatedUser = await prisma.user.update({
       where: {
         id: userID

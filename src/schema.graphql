@@ -39,6 +39,7 @@ input UserInputData {
 input UserUpdateData {
   name: String
   email: String
+  password: String
   active: Boolean
 }
 

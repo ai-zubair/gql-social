@@ -41,6 +41,7 @@ export interface UserDataUpdate{
   email?: string;
   name?: string;
   active?: boolean;
+  password?: string;
   [key: string]: string | boolean | undefined;
 }
 
