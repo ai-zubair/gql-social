@@ -15,7 +15,8 @@ const User: IResolverObject<User, ContextWithRequestResponse, EmptyArgs> = {
   async posts(parent, args, { prisma }, info){
     const userPosts = await prisma.post.findMany({
       where:{
-        authorId: parent.id
+        authorId: parent.id,
+        published: true
       }
     })
     return userPosts;
