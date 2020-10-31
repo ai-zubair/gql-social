@@ -9,6 +9,12 @@ interface PostQueryArgs{
   postID: string;
 }
 
+interface UserQueryArgs{
+  keyword?: string;
+  skip?: number;
+  take?: number;
+}
+
 const me: IFieldResolver<EmptyParent, ContextWithRequestResponse, EmptyArgs> = async(parent, args, {prisma, authenticateUser, request}, info)=>{
   const userID = authenticateUser(request.headers as ClientStore);
   const userProfile = await prisma.user.findOne({
@@ -84,14 +90,19 @@ const posts: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> 
   return postsWithFilter;
 }
 
-const users: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> = async(parent, args, { prisma }, info)=>{
-  const keyword = args.keyword;
+const users: IFieldResolver<EmptyParent, ContextWithRequestResponse, UserQueryArgs> = async(parent, args, { prisma }, info)=>{
+  const {keyword, skip, take} = args
   const usersWithFilter = await prisma.user.findMany({
     where: {
       name: {
-        contains: keyword
+        contains: keyword || ""
       }
-    }
+    },
+    orderBy:{
+      createdAt: "asc"
+    },
+    take: take || 999999999,
+    skip: skip || 0
   })
   return usersWithFilter;
 }
