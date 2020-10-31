@@ -88,7 +88,6 @@ const posts: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostsQueryA
     cursorPostID = latestPost.id;
     postsToSkip = 0;
   }
-  console.log("Skip: %d\nTake: %d\nCursorPost: %s",postsToSkip, postsToTake, cursorPostID);
   const postsWithFilter = await prisma.post.findMany({
     where: {
       OR:[
