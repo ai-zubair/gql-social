@@ -15,6 +15,12 @@ interface UserQueryArgs{
   take?: number;
 }
 
+interface PostsQueryArgs{
+  keyword?: string;
+  take?: number;
+  cursor?: string;
+}
+
 const me: IFieldResolver<EmptyParent, ContextWithRequestResponse, EmptyArgs> = async(parent, args, {prisma, authenticateUser, request}, info)=>{
   const userID = authenticateUser(request.headers as ClientStore);
   const userProfile = await prisma.user.findOne({
@@ -67,25 +73,48 @@ const myPosts: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs
   return userPosts;
 }
 
-const posts: IFieldResolver<EmptyParent, ContextWithRequestResponse, QueryArgs> = async(parent, args, { prisma }, info)=>{
-  const keyword = args.keyword;
+const posts: IFieldResolver<EmptyParent, ContextWithRequestResponse, PostsQueryArgs> = async(parent, args, { prisma }, info)=>{
+  let postsToSkip = 1;
+  let cursorPostID = args.cursor;
+  const filterKeyword = args.keyword || "";
+  const postsToTake = args.take || 99999999999;
+  if(!cursorPostID){
+    const [latestPost] = await prisma.post.findMany({
+      orderBy:{
+        createdAt: "desc"
+      },
+      take: 1
+    })
+    cursorPostID = latestPost.id;
+    postsToSkip = 0;
+  }
+  console.log("Skip: %d\nTake: %d\nCursorPost: %s",postsToSkip, postsToTake, cursorPostID);
   const postsWithFilter = await prisma.post.findMany({
     where: {
       OR:[
         {
           title: {
-            contains: keyword
+            contains: filterKeyword
           },
           published: true
         },
         {
           body: {
-            contains: keyword
+            contains: filterKeyword
           },
           published: true
         }
       ]
-    }      
+    },
+    orderBy:{
+      createdAt: "desc"
+    },
+    cursor: {
+      id: cursorPostID
+    },
+    skip: postsToSkip,
+    take: postsToTake
+
   })
   return postsWithFilter;
 }
